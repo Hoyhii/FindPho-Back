@@ -1,4 +1,6 @@
-from fastapi import FastAPI,Response,status,HTTPException
+from typing import Optional
+from fastapi import FastAPI,Response,status,HTTPException,Header
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
@@ -7,6 +9,20 @@ from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 
 app = FastAPI()
+
+origins = [
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:8080",
+    "http://localhost",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Post(BaseModel):
     title:str
@@ -29,8 +45,13 @@ def find_index_post(id):
 
 
 @app.get("/posts")
-def get_posts():
+async def get_posts():
     return {"data": my_posts}
+
+@app.options("/posts")
+def get_options(user_agent: Optional[str] = Header(None)):
+    return {}
+
 
 @app.post("/posts",status_code=HTTP_201_CREATED)
 def create_posts(post:Post):
